@@ -1,0 +1,959 @@
+{
+  "info": {
+    "_postman_id": "b6805b29-ae50-4c94-be79-eb5961c8cf0b",
+    "name": "E-Commerce",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "21463228"
+  },
+  "item": [
+    {
+      "name": "E-Commerce",
+      "item": [
+        {
+          "name": "User Details",
+          "item": [
+            {
+              "name": "User Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{URL}}/api/users/me",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update User Details",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"addresses\": [\n        {\n            \"fullName\": \"John Doe\",\n            \"phone\": \"+91 9876543210\",\n            \"addressLine1\": \"{{$randomStreetAddress}}\",\n            \"addressLine2\": \"{{$randomStreetAddress}}\",\n            \"city\": \"Mumbai\",\n            \"state\": \"Maharashtra\",\n            \"postalCode\": \"400001\",\n            \"country\": \"India\"\n        }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{URL}}/api/users/me",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Details By Id",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:5000/api/users/:id",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5000",
+                  "path": [
+                    "api",
+                    "users",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "69a6cb4386927cac2b08b250"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get All User Details",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:5000/api/users?page=1&limit=10",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5000",
+                  "path": [
+                    "api",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "Create Order",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        {\n            \"product\": \"69a6cbfc86927cac2b08b262\",\n            \"quantity\": 10\n        }\n    ],\n    \"address\": \"69a6f2fbee40b8921af41b0d\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{URL}}/api/orders",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get User Orders",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{URL}}/api/orders?page=1&limit=10",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order by ID",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{URL}}/api/orders/64f5a1b2c3d4e5f6g7h8i9j0",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "64f5a1b2c3d4e5f6g7h8i9j0"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Order",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                ],
+                "url": {
+                  "raw": "{{URL}}/api/orders/:id/cancel",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "cancel"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": ""
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Orders (Admin)",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{URL}}/api/orders/admin/all?page=1&limit=10&status=CREATED",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "admin",
+                    "all"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "status",
+                      "value": "CREATED"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Order Status (Admin)",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"orderStatus\": \"SHIPPING\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{URL}}/api/orders/:id/status",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "status"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "69a72436f593ffecb8e050f5"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Payment",
+          "item": [
+            {
+              "name": "Create Payment Intent",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n         \"orderId\": \"64f5a1b2c3d4e5f6g7h8i9j0\",\n         \"currency\": \"usd\"\n       }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{URL}}/api/payments/create-intent",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "create-intent"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "cookies.txt"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend verification email",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"pietro80@yahoo.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{URL}}/api/auth/resend-verification-email",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "resend-verification-email"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Filters",
+          "item": [
+            {
+              "name": "Filter by category",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{URL}}/api/products?category=electronics",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "electronics"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Filter by price range",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{URL}}/api/products?minPrice=500&maxPrice=1000",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "minPrice",
+                      "value": "500"
+                    },
+                    {
+                      "key": "maxPrice",
+                      "value": "1000"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Search by title/description",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{URL}}/api/products?search=laptop",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "laptop"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Sort by price (ascending)",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{URL}}/api/products?sortBy=price&sortOrder=-1",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "sortBy",
+                      "value": "price"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "-1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Combined filters",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{URL}}/api/products?page=1&limit=10&category=electronics&minPrice=50&maxPrice=500&search=phone&sortBy=price&sortOrder=-1",
+                  "host": [
+                    "{{URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "category",
+                      "value": "electronics"
+                    },
+                    {
+                      "key": "minPrice",
+                      "value": "50"
+                    },
+                    {
+                      "key": "maxPrice",
+                      "value": "500"
+                    },
+                    {
+                      "key": "search",
+                      "value": "phone"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "price"
+                    },
+                    {
+                      "key": "sortOrder",
+                      "value": "-1"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Products",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{URL}}/api/products?page=1&limit=10",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{URL}}/api/products/64f5a1b2c3d4e5f6g7h8i9j0",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "64f5a1b2c3d4e5f6g7h8i9j0"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"{{$randomProductName}}\",\n    \"price\": {{$randomPrice}},\n    \"stock\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{URL}}/api/products/:id",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "69a6cbfc86927cac2b08b262"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"{{$randomProductName}}\",\n    \"description\": \"{{$randomLoremParagraph}}\",\n    \"price\": 99.99,\n    \"category\": \"{{$randomJobType}}\",\n    \"stock\": 100,\n    \"images\": [\n        \"https://cloudinary.com/image1.jpg\",\n        \"https://cloudinary.com/image2.jpg\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{URL}}/api/products",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5000/api/products/64f5a1b2c3d4e5f6g7h8i9j0",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "products",
+                "64f5a1b2c3d4e5f6g7h8i9j0"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Presigned URL for Image Upload",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n         \"folder\": \"products\",\n         \"public_id\": \"product_123_image_1\",\n         \"resource_type\": \"image\"\n       }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{URL}}/api/products/upload/signature",
+              "host": [
+                "{{URL}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "upload",
+                "signature"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Client-Side Upload to Cloudinary",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "type": "file",
+                  "key": "file",
+                  "src": "/path/to/image.jpg"
+                },
+                {
+                  "type": "text",
+                  "key": "folder",
+                  "value": "products"
+                },
+                {
+                  "type": "text",
+                  "key": "public_id",
+                  "value": "product_123_image_1"
+                },
+                {
+                  "type": "text",
+                  "key": "timestamp",
+                  "value": "1709380800"
+                },
+                {
+                  "type": "text",
+                  "key": "api_key",
+                  "value": "123456789012345"
+                },
+                {
+                  "type": "text",
+                  "key": "signature",
+                  "value": "a1b2c3d4e5f6g7h8i9j0..."
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://api.cloudinary.com/v1_1/{{CLOUD_TOKEN}}/image/upload",
+              "protocol": "https",
+              "host": [
+                "api",
+                "cloudinary",
+                "com"
+              ],
+              "path": [
+                "v1_1",
+                "{{CLOUD_TOKEN}}",
+                "image",
+                "upload"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

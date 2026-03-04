@@ -1,0 +1,118 @@
+import { useFormik } from 'formik';
+import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import * as Yup from 'yup';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useForgotPassword } from './hooks/useForgotPassword';
+
+const ForgotPassword = () => {
+    const { mutate: forgotPassword, isPending, isSuccess, isError, error } = useForgotPassword();
+
+    const formik = useFormik({
+        initialValues: {
+            email: '',
+        },
+        validationSchema: Yup.object({
+            email: Yup.string()
+                .email('Invalid email address')
+                .required('Required'),
+        }),
+        onSubmit: async (values) => {
+            forgotPassword(values.email);
+        },
+    });
+
+    if (isSuccess) {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4 bg-muted/30">
+                <Card className="w-full max-w-md">
+                    <CardHeader className="space-y-1">
+                        <div className="flex justify-center mb-4">
+                            <CheckCircle className="h-16 w-16 text-green-500" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold tracking-tight text-center">Email Sent!</CardTitle>
+                        <CardDescription className="text-center">
+                            We've sent a password reset link to your email address. Please check your inbox and follow the instructions.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center gap-4">
+                        <Button variant="outline" asChild className="w-full">
+                            <Link to="/login">Back to Login</Link>
+                        </Button>
+                        <div className="text-sm text-center text-muted-foreground">
+                            Didn't receive the email?{' '}
+                            <button
+                                type="button"
+                                onClick={() => formik.handleSubmit()}
+                                className="text-primary underline-offset-4 hover:underline"
+                                disabled={isPending}
+                            >
+                                Resend
+                            </button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4 bg-muted/30">
+            <Card className="w-full max-w-md">
+                <CardHeader className="space-y-1">
+                    <div className="flex justify-center mb-4">
+                        <Mail className="h-12 w-12 text-primary" />
+                    </div>
+                    <CardTitle className="text-2xl font-bold tracking-tight text-center">Forgot Password</CardTitle>
+                    <CardDescription className="text-center">
+                        Enter your email address and we'll send you a link to reset your password.
+                    </CardDescription>
+                </CardHeader>
+                <form onSubmit={formik.handleSubmit}>
+                    <CardContent className="grid gap-4">
+                        {isError && (
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                {error?.response?.data?.message || 'Failed to send reset email. Please try again.'}
+                            </div>
+                        )}
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="m@example.com"
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                value={formik.values.email}
+                                className={formik.touched.email && formik.errors.email ? 'border-red-500' : ''}
+                            />
+                            {formik.touched.email && formik.errors.email ? (
+                                <div className="text-red-500 text-xs">{formik.errors.email}</div>
+                            ) : null}
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={isPending}>
+                            {isPending ? 'Sending...' : 'Send Reset Link'}
+                        </Button>
+
+                        <div className="text-sm text-center text-muted-foreground">
+                            Remember your password?{' '}
+                            <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+                                Back to Login
+                            </Link>
+                        </div>
+                    </CardContent>
+                </form>
+            </Card>
+        </div>
+    );
+};
+
+export default ForgotPassword;
