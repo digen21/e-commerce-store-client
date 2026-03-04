@@ -2,13 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/services/api";
 
 const getUser = async () => {
-  console.log("[useAuth] Fetching profile...");
   try {
     const { data } = await api.get("/auth/profile", { withCredentials: true });
-    console.log("[useAuth] Profile fetched:", data.user);
     return data.user;
   } catch (error) {
-    console.log("[useAuth] Profile fetch failed:", error.message);
     // Return null for 401, CORS errors, or network errors
     // This allows the app to load normally for unauthenticated users
     return null;
@@ -30,12 +27,10 @@ export const useAuth = (enabled = true) => {
     // Show cached data immediately while loading in background
     placeholderData: () => {
       const cached = queryClient.getQueryData(["authUser"]);
-      console.log("[useAuth] placeholderData:", cached);
       return cached;
     },
   });
 
-  console.log("[useAuth] user:", user, "isLoading:", isLoading);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials) => {

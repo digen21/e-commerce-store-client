@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Link, useNavigate } from 'react-router-dom';
@@ -7,9 +7,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
+    const [showPassword, setShowPassword] = useState(false);
     const { login, isLoggingIn, loginError } = useAuth();
     const navigate = useNavigate();
 
@@ -29,7 +30,6 @@ const Login = () => {
         onSubmit: async (values, { setErrors }) => {
             try {
                 const data = await login(values);
-                console.log('[Login] Login successful, user:', data.user);
                 navigate('/', { replace: true });
             } catch (err) {
                 const message = err?.response?.data?.message || 'Invalid credentials. Please try again.';
@@ -80,15 +80,31 @@ const Login = () => {
                                     Forgot password?
                                 </Link>
                             </div>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                value={formik.values.password}
-                                className={formik.touched.password && formik.errors.password ? 'border-red-500' : ''}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.password}
+                                    className={formik.touched.password && formik.errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                </Button>
+                            </div>
                             {formik.touched.password && formik.errors.password ? (
                                 <div className="text-red-500 text-xs">{formik.errors.password}</div>
                             ) : null}

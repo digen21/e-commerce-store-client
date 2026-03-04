@@ -27,7 +27,6 @@ const AdminDashboard = () => {
 
     const handleViewOrder = (order) => {
         // Navigate to order details or open modal
-        console.log('View order:', order);
     };
 
     if (dashboardLoading) {

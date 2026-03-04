@@ -17,13 +17,9 @@ const AdminProducts = () => {
 
     useEffect(() => {
         if (error) {
-            console.error('Error fetching products:', error);
             toast.error('Failed to load products');
         }
-        if (data) {
-            console.log('Products loaded:', data);
-        }
-    }, [data, error]);
+    }, [error]);
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {

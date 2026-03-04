@@ -15,7 +15,6 @@ export const MainLayout = () => {
   const { user, logout } = useAuth(true); // Need user for login/logout buttons
   const navigate = useNavigate();
 
-  console.log("[MainLayout] user:", user);
 
   const handleLogout = async () => {
     await logout();
