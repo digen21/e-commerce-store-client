@@ -1,20 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useResetPassword } from './hooks/useResetPassword';
+import { useAuth } from './hooks/useAuth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, CheckCircle, Lock } from 'lucide-react';
+import { AlertCircle, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 
 const ResetPassword = () => {
     const [searchParams] = useSearchParams();
+    const location = useLocation();
     const navigate = useNavigate();
-    const token = searchParams.get('token');
-    const [tokenProcessed, setTokenProcessed] = useState(false);
+    const { user } = useAuth();
+    
+    // Get token from URL query param or location state
+    const urlToken = searchParams.get('token');
+    const stateToken = location.state?.token;
+    const effectiveToken = urlToken || stateToken;
+    
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { mutate: resetPassword, isPending, isSuccess, isError, error } = useResetPassword();
+
+    // Redirect if already logged in and verified
+    useEffect(() => {
+        if (user?.isVerified) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
 
     const formik = useFormik({
         initialValues: {
@@ -29,27 +45,22 @@ const ResetPassword = () => {
                 .oneOf([Yup.ref('password'), null], 'Passwords must match')
                 .required('Required'),
         }),
-        onSubmit: async (values) => {
+        onSubmit: async (values, { setErrors }) => {
+            if (!effectiveToken) {
+                setErrors({ general: 'Reset token is missing. Please request a new password reset link.' });
+                return;
+            }
+            
             try {
-                await resetPassword({ token, password: values.password });
+                await resetPassword({ token: effectiveToken, password: values.password });
             } catch (err) {
-                // Error is handled by isError state
+                const message = err?.response?.data?.message || 'Failed to reset password. The link may have expired.';
+                setErrors({ general: message });
             }
         },
     });
 
-    // Extract token and redirect to clean URL (hide token from address bar)
-    useEffect(() => {
-        if (token && !tokenProcessed) {
-            navigate('/reset-password/form', { replace: true, state: { token } });
-            setTokenProcessed(true);
-        }
-    }, [token, navigate, tokenProcessed]);
-
-    // Get token from state if on form route
-    const stateToken = window.history.state?.usr?.token;
-    const effectiveToken = stateToken || token;
-
+    // Show invalid link message if no token
     if (!effectiveToken) {
         return (
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4 bg-muted/30">
@@ -107,7 +118,14 @@ const ResetPassword = () => {
                 </CardHeader>
                 <form onSubmit={formik.handleSubmit}>
                     <CardContent className="grid gap-4">
-                        {isError && (
+                        {formik.errors.general && (
+                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                {formik.errors.general}
+                            </div>
+                        )}
+                        
+                        {isError && !formik.errors.general && (
                             <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4" />
                                 {error?.response?.data?.message || 'Failed to reset password. The link may have expired.'}
@@ -116,15 +134,31 @@ const ResetPassword = () => {
 
                         <div className="grid gap-2">
                             <Label htmlFor="password">New Password</Label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                value={formik.values.password}
-                                className={formik.touched.password && formik.errors.password ? 'border-red-500' : ''}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.password}
+                                    className={formik.touched.password && formik.errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                </Button>
+                            </div>
                             {formik.touched.password && formik.errors.password ? (
                                 <div className="text-red-500 text-xs">{formik.errors.password}</div>
                             ) : null}
@@ -132,15 +166,31 @@ const ResetPassword = () => {
 
                         <div className="grid gap-2">
                             <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                            <Input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="password"
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                value={formik.values.confirmPassword}
-                                className={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'border-red-500' : ''}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    value={formik.values.confirmPassword}
+                                    className={formik.touched.confirmPassword && formik.errors.confirmPassword ? 'border-red-500 pr-10' : 'pr-10'}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    tabIndex={-1}
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                        <Eye className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                </Button>
+                            </div>
                             {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
                                 <div className="text-red-500 text-xs">{formik.errors.confirmPassword}</div>
                             ) : null}

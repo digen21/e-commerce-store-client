@@ -40,41 +40,71 @@ const LowStockWidget = ({ products }) => {
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
-                    {products.slice(0, 5).map((product) => (
-                        <div
-                            key={product._id}
-                            className="flex items-center justify-between gap-4 rounded-lg bg-orange-50/50 dark:bg-orange-950/20 p-3 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
-                        >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <img
-                                    src={product.imageUrl}
-                                    alt={product.title}
-                                    className="h-12 w-12 rounded-md object-cover bg-muted"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">{product.title}</p>
-                                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                    {products.slice(0, 5).map((product) => {
+                        // Handle API response format: { name, image, category, stockLeft, variants }
+                        const imageUrl = product.image || product.images?.[0] || product.imageUrl;
+                        const productName = product.name || product.title || 'Product';
+                        const categoryName = product.category || 'Uncategorized';
+                        const stockLeft = product.stockLeft ?? 0;
+                        
+                        return (
+                            <div
+                                key={product._id || product.id || productName}
+                                className="flex items-center justify-between gap-4 rounded-lg bg-orange-50/50 dark:bg-orange-950/20 p-3 transition-colors hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                            >
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <img
+                                        src={imageUrl}
+                                        alt={productName}
+                                        className="h-12 w-12 rounded-md object-cover bg-muted"
+                                        onError={(e) => {
+                                            const target = e.target;
+                                            if (target.dataset.fallback) return;
+                                            target.dataset.fallback = 'true';
+                                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50"%3E%3Crect fill="%23ddd" width="50" height="50"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                        }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium truncate">{productName}</p>
+                                        <p className="text-xs text-muted-foreground">{categoryName}</p>
+                                        {product.variants && product.variants.length > 0 && (
+                                            <div className="flex gap-1 mt-1 flex-wrap">
+                                                {product.variants.slice(0, 3).map((variant, idx) => (
+                                                    <span key={variant._id || idx} className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
+                                                        {variant.size}: {variant.stock}
+                                                    </span>
+                                                ))}
+                                                {product.variants.length > 3 && (
+                                                    <span className="text-xs text-muted-foreground">+{product.variants.length - 3} more</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Badge
+                                        variant="secondary"
+                                        className={
+                                            stockLeft <= 0
+                                                ? 'bg-red-500/10 text-red-500'
+                                                : stockLeft <= 5
+                                                ? 'bg-orange-500/10 text-orange-500'
+                                                : 'bg-yellow-500/10 text-yellow-500'
+                                        }
+                                    >
+                                        {stockLeft <= 0
+                                            ? 'Out of Stock'
+                                            : stockLeft <= 5
+                                            ? `${stockLeft} left`
+                                            : `Low: ${stockLeft}`}
+                                    </Badge>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link to={`/admin/products`}>Restock</Link>
+                                    </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <Badge
-                                    variant="secondary"
-                                    className={
-                                        product.stockQuantity === 0
-                                            ? 'bg-red-500/10 text-red-500'
-                                            : 'bg-orange-500/10 text-orange-500'
-                                    }
-                                >
-                                    {product.stockQuantity === 0
-                                        ? 'Out of Stock'
-                                        : `${product.stockQuantity} left`}
-                                </Badge>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link to={`/admin/products`}>Restock</Link>
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     {products.length > 5 && (
                         <Button variant="ghost" className="w-full" asChild>
                             <Link to="/admin/inventory">

@@ -1,26 +1,28 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { toggleCart, removeFromCart, updateQuantity, clearCart } from '../../store/uiSlice';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Trash2, Plus, Minus, CreditCard } from 'lucide-react';
-import { useAuth } from '../auth/hooks/useAuth';
-import { useCheckout } from '../orders/hooks/useOrders';
+import { CreditCard, Minus, Plus, Trash2 } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { removeFromCart, toggleCart, updateQuantity } from '../../store/uiSlice';
+import { useAuth } from '../auth/hooks/useAuth';
 
 export const CartSheet = () => {
     const { isCartOpen, cart } = useSelector((state) => state.ui);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { user } = useAuth();
-    const checkout = useCheckout();
 
     const totalAmount = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    const handleUpdateQuantity = (id, newQuantity, currentStock) => {
+    const handleUpdateQuantity = (id, newQuantity, currentStock, variant) => {
         if (newQuantity <= 0) {
-            dispatch(removeFromCart(id));
-        } else if (newQuantity <= currentStock) {
-            dispatch(updateQuantity({ id, quantity: newQuantity }));
+            dispatch(removeFromCart({ id, variant }));
+        } else if (currentStock === undefined || newQuantity <= currentStock) {
+            // If stock is undefined, allow any quantity (fallback for compatibility)
+            dispatch(updateQuantity({ id, quantity: newQuantity, variant }));
         } else {
             toast.error('Not enough stock available');
         }
@@ -33,24 +35,14 @@ export const CartSheet = () => {
             return;
         }
 
-        try {
-            const orderData = {
-                items: cart.map(i => ({
-                    productId: i.id,
-                    title: i.title,
-                    price: i.price,
-                    quantity: i.quantity,
-                    imageUrl: i.imageUrl
-                })),
-                totalAmount
-            };
-
-            await checkout.mutateAsync(orderData);
-            dispatch(clearCart());
-            toast.success('Order placed successfully (Mock Stripe)!');
-        } catch (err) {
-            toast.error('Checkout failed');
+        if (cart.length === 0) {
+            toast.error('Your cart is empty.');
+            return;
         }
+
+        // Navigate to checkout page to collect address and complete order
+        dispatch(toggleCart());
+        navigate('/checkout');
     };
 
     return (
@@ -69,31 +61,72 @@ export const CartSheet = () => {
                             <Button variant="outline" onClick={() => dispatch(toggleCart())}>Continue Shopping</Button>
                         </div>
                     ) : (
-                        cart.map((item) => (
-                            <div key={item.id} className="flex gap-4 border-b pb-4">
-                                <img src={item.imageUrl} alt={item.title} className="w-20 h-20 object-cover rounded-md bg-muted" />
-                                <div className="flex-1 flex flex-col justify-between">
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-semibold text-sm line-clamp-2">{item.title}</h3>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={() => dispatch(removeFromCart(item.id))}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <div className="flex justify-between items-end mt-2">
-                                        <div className="font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</div>
-                                        <div className="flex items-center gap-2 bg-muted/50 rounded-md">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.stockQuantity)}>
-                                                <Minus className="h-3 w-3" />
+                        cart.map((item) => {
+                            // Get image from images array or imageUrl fallback
+                            const imageUrl = item.images?.[0] || item.imageUrl;
+
+                            return (
+                                <div key={item.id} className="flex gap-4 border-b pb-4">
+                                    <img
+                                        src={imageUrl}
+                                        alt={item.title}
+                                        className="w-20 h-20 object-cover rounded-md bg-muted"
+                                        onError={(e) => {
+                                            const target = e.target;
+                                            if (target.dataset.fallback) return;
+                                            target.dataset.fallback = 'true';
+                                            target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23ddd" width="80" height="80"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                        }}
+                                    />
+                                    <div className="flex-1 flex flex-col justify-between">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-sm line-clamp-2">
+                                                    {item.title && typeof item.title === 'string' ? item.title : (item.productTitle || 'Product')}
+                                                </h3>
+                                                {item.size && (
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                                            Size {item.size}
+                                                        </Badge>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
+                                                onClick={() => dispatch(removeFromCart({ id: item.id, variant: item.variant }))}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
-                                            <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.stockQuantity)}>
-                                                <Plus className="h-3 w-3" />
-                                            </Button>
+                                        </div>
+                                        <div className="flex justify-between items-end mt-2">
+                                            <div className="font-bold text-primary">${(item.price * item.quantity).toFixed(2)}</div>
+                                            <div className="flex items-center gap-2 bg-muted/50 rounded-md">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.stock ?? item.stockQuantity, item.variant)}
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </Button>
+                                                <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7"
+                                                    onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.stock ?? item.stockQuantity, item.variant)}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 
@@ -106,14 +139,9 @@ export const CartSheet = () => {
                         <Button
                             className="w-full text-lg h-12"
                             onClick={handleCheckout}
-                            disabled={checkout.isPending}
                         >
-                            {checkout.isPending ? 'Processing...' : (
-                                <>
-                                    <CreditCard className="mr-2 h-5 w-5" />
-                                    Checkout with Stripe
-                                </>
-                            )}
+                            <CreditCard className="mr-2 h-5 w-5" />
+                            Checkout with Stripe
                         </Button>
                     </SheetFooter>
                 )}

@@ -83,12 +83,12 @@ const AdminCustomers = () => {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="secondary">{customer.totalOrders} orders</Badge>
+                                                <Badge variant="secondary">{customer.stats?.totalOrders || 0} orders</Badge>
                                             </TableCell>
                                             <TableCell className="font-semibold text-primary">
                                                 <div className="flex items-center gap-1">
                                                     <DollarSign className="h-4 w-4" />
-                                                    {customer.totalSpent?.toFixed(2)}
+                                                    {(customer.stats?.totalSpent || 0).toFixed(2)}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -98,8 +98,8 @@ const AdminCustomers = () => {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={customer.isEmailVerified ? 'default' : 'secondary'}>
-                                                    {customer.isEmailVerified ? 'Verified' : 'Unverified'}
+                                                <Badge variant={customer.isVerified ? 'default' : 'secondary'}>
+                                                    {customer.isVerified ? 'Verified' : 'Unverified'}
                                                 </Badge>
                                             </TableCell>
                                         </TableRow>

@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
 import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import * as Yup from 'yup';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const { login, isLoggingIn, loginError } = useAuth();
+    const { login, isLoggingIn, loginError, user } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (user) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
 
     const formik = useFormik({
         initialValues: {
@@ -29,8 +37,23 @@ const Login = () => {
         }),
         onSubmit: async (values, { setErrors }) => {
             try {
-                const data = await login(values);
-                navigate('/', { replace: true });
+                const result = await login(values);
+                
+                // Check if user is verified
+                const user = result?.user || result?.data?.user;
+                if (user && !user.isVerified) {
+                    // User is not verified - redirect to verification page
+                    navigate('/verify-email', { 
+                        replace: true,
+                        state: { 
+                            email: values.email,
+                            message: 'Please verify your email to continue.'
+                        }
+                    });
+                } else {
+                    // User is verified - redirect to home
+                    navigate('/', { replace: true });
+                }
             } catch (err) {
                 const message = err?.response?.data?.message || 'Invalid credentials. Please try again.';
                 setErrors({ general: message });

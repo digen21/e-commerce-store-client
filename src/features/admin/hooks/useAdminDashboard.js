@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
-import { mockDashboardOverview, mockSalesTrends, mockMonthlySalesTrends, mockOrderStatusDistribution } from '@/services/mockAdminData';
 
-// Use mock data - replace with actual API call when backend is ready
-const USE_MOCK_DATA = true;
+// Use mock data - set to false to use real API calls
+const USE_MOCK_DATA = false;
 
 export const useAdminDashboard = () => {
     return useQuery({
@@ -12,11 +11,36 @@ export const useAdminDashboard = () => {
             if (USE_MOCK_DATA) {
                 // Simulate API delay
                 await new Promise(resolve => setTimeout(resolve, 500));
-                return mockDashboardOverview.data;
+                return {
+                    totalProducts: 0,
+                    totalOrders: 0,
+                    totalRevenue: 0,
+                    conversionRate: 0,
+                    metrics: {
+                        productsChange: 0,
+                        ordersChange: 0,
+                        revenueChange: 0,
+                        conversionChange: 0
+                    }
+                };
             }
 
-            const { data } = await api.get('/api/admin/dashboard');
-            return data;
+            // API endpoint: /api/admin/analytics/dashboard-overview
+            const { data } = await api.get('/admin/analytics/dashboard-overview');
+            
+            // API returns: { success, message, data: {...}, status }
+            return data.data || {
+                totalProducts: 0,
+                totalOrders: 0,
+                totalRevenue: 0,
+                conversionRate: 0,
+                metrics: {
+                    productsChange: 0,
+                    ordersChange: 0,
+                    revenueChange: 0,
+                    conversionChange: 0
+                }
+            };
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
@@ -28,15 +52,21 @@ export const useSalesTrends = (period = 'weekly') => {
         queryFn: async () => {
             if (USE_MOCK_DATA) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                // Return the correct mock data based on period
-                const mockData = period === 'monthly' ? mockMonthlySalesTrends : mockSalesTrends;
-                return { ...mockData.data, period };
+                return { trends: [], summary: { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 } };
             }
 
-            const { data } = await api.get('/api/admin/analytics/sales-trends', {
+            // API endpoint: /api/admin/analytics/sales-performance?period=weekly|monthly
+            const { data } = await api.get('/admin/analytics/sales-performance', {
                 params: { period }
             });
-            return data;
+
+            // API returns: { success, message, data: { period, currency, trends, summary }, status }
+            return data.data || {
+                period,
+                currency: 'INR',
+                trends: [],
+                summary: { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 }
+            };
         },
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
@@ -48,11 +78,20 @@ export const useOrderStatusDistribution = () => {
         queryFn: async () => {
             if (USE_MOCK_DATA) {
                 await new Promise(resolve => setTimeout(resolve, 500));
-                return mockOrderStatusDistribution.data;
+                return {
+                    totalOrders: 0,
+                    distribution: []
+                };
             }
-            
-            const { data } = await api.get('/api/admin/analytics/order-status-distribution');
-            return data;
+
+            // API endpoint: /api/admin/analytics/order-status-distribution
+            const { data } = await api.get('/admin/analytics/order-status-distribution');
+
+            // API returns: { success, message, data: { totalOrders, distribution: [...] }, status }
+            return data.data || {
+                totalOrders: 0,
+                distribution: []
+            };
         },
         staleTime: 5 * 60 * 1000, // 5 minutes
     });

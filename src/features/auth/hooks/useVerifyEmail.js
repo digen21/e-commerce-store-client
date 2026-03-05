@@ -4,13 +4,10 @@ import api from '@/services/api';
 export const useVerifyEmail = () => {
     return useMutation({
         mutationFn: async (token) => {
-            try {
-                const { data } = await api.get('/auth/verify-email', { params: { token }, withCredentials: false });
-                return data;
-            } catch (error) {
-                // Re-throw to let the component handle it
-                throw error;
-            }
+            const { data } = await api.post('/auth/verify-mail', {}, {
+                params: { token }
+            });
+            return data;
         },
         retry: false,
     });

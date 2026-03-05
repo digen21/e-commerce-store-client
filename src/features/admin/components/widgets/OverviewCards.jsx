@@ -23,7 +23,7 @@ const overviewConfig = {
         icon: DollarSign,
         gradient: 'from-green-500/10 to-emerald-500/10',
         iconColor: 'text-green-500',
-        formatValue: (value) => `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+        formatValue: (value) => `${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
     },
     conversionRate: {
         title: 'Conversion Rate',

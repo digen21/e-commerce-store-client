@@ -1,23 +1,33 @@
-import { useEffect, useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { useVerifyEmail } from './hooks/useVerifyEmail';
-import { useResendVerificationEmail } from './hooks/useResendVerificationEmail';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react';
+import { useFormik } from 'formik';
+import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import * as Yup from 'yup';
+
+import { useResendVerificationEmail } from './hooks/useResendVerificationEmail';
+import { useVerifyEmail } from './hooks/useVerifyEmail';
+import { useAuth } from './hooks/useAuth';
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const token = searchParams.get('token');
     const [showResend, setShowResend] = useState(false);
     const [countdown, setCountdown] = useState(3);
     const { mutate: verifyEmail, isPending, isSuccess, isError, error } = useVerifyEmail();
     const { mutate: resendEmail, isPending: isResending, isSuccess: isResent } = useResendVerificationEmail();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (user) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
 
     const formik = useFormik({
         initialValues: {
@@ -199,7 +209,7 @@ const VerifyEmail = () => {
     if (isError) {
         // Check if it's a CORS/network error
         const isCorsError = error?.message?.includes('CORS') || !error?.response;
-        
+
         return (
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4 bg-muted/30">
                 <Card className="w-full max-w-md">
@@ -209,7 +219,7 @@ const VerifyEmail = () => {
                         </div>
                         <CardTitle className="text-2xl font-bold tracking-tight text-center">Verification Failed</CardTitle>
                         <CardDescription className="text-center">
-                            {isCorsError 
+                            {isCorsError
                                 ? 'Unable to connect to server. Please try again later or contact support.'
                                 : error?.response?.data?.message || 'The verification link is invalid or has expired.'
                             }

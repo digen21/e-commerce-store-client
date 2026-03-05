@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
 import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import * as Yup from 'yup';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from './hooks/useAuth';
+
 
 const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const { register, isRegistering, registerError } = useAuth();
+    const { register, isRegistering, registerError, user } = useAuth(false); // Don't fetch by default
     const navigate = useNavigate();
+
+    // Redirect if already logged in AND verified
+    useEffect(() => {
+        if (user?.isVerified) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
 
     const formik = useFormik({
         initialValues: {
@@ -40,7 +49,16 @@ const Register = () => {
             try {
                 const { confirmPassword, ...registerData } = values;
                 await register(registerData);
-                navigate('/');
+
+                // After successful registration, navigate to verification page
+                // Don't wait for profile to load - user needs to verify email first
+                navigate('/verify-email', {
+                    replace: true,
+                    state: {
+                        email: values.email,
+                        message: 'Registration successful! Please check your email for verification link.'
+                    }
+                });
             } catch (err) {
                 const message = err?.response?.data?.message || 'Registration failed or email already in use.';
                 setErrors({ general: message });

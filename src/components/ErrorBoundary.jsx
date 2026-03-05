@@ -1,7 +1,8 @@
+import { AlertTriangle, Home, RefreshCcw } from 'lucide-react';
 import React from 'react';
+
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { AlertTriangle, RefreshCcw, Home } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -13,7 +14,7 @@ class ErrorBoundary extends React.Component {
         };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(_error) {
         return { hasError: true };
     }
 

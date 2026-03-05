@@ -37,7 +37,9 @@ export const useProduct = (id) => {
     return useQuery({
         queryKey: ['product', id],
         queryFn: async () => {
+            // API endpoint: GET /api/products/:id
             const { data } = await api.get(`/products/${id}`);
+            // API returns: { success, message, data: { product data }, status }
             return data.data || data;
         },
         enabled: !!id,

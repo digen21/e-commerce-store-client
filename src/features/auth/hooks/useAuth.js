@@ -4,31 +4,40 @@ import api from "@/services/api";
 const getUser = async () => {
   try {
     const { data } = await api.get("/auth/profile", { withCredentials: true });
-    return data.user;
+    return data.user || data.data?.user;
   } catch (error) {
-    // Return null for 401, CORS errors, or network errors
-    // This allows the app to load normally for unauthenticated users
-    return null;
+    // Only return null for 401/403 (truly unauthorized)
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      return null;
+    }
+    // For network errors, CORS errors, or server down - throw error to trigger retry
+    // This keeps the user logged in (cached data) while server is temporarily unavailable
+    throw error;
   }
 };
 
 export const useAuth = (enabled = true) => {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ["authUser"],
     queryFn: getUser,
-    staleTime: Infinity,
-    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes - refetch after 5 min
+    retry: (failureCount, error) => {
+      // Retry on network errors, but not on 401/403
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        return false;
+      }
+      // Retry up to 3 times for network errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * Math.pow(2, attemptIndex), 10000), // Exponential backoff
     enabled, // Only fetch when explicitly enabled
-    // Don't refetch on window focus or reconnect
+    // Don't refetch on window focus or reconnect (prevents blocking after registration)
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    // Show cached data immediately while loading in background
-    placeholderData: () => {
-      const cached = queryClient.getQueryData(["authUser"]);
-      return cached;
-    },
+    // Keep cached data even when there's an error
+    placeholderData: (previousData) => previousData,
   });
 
 
@@ -39,7 +48,7 @@ export const useAuth = (enabled = true) => {
     },
     onSuccess: (data) => {
       // Set the user data in cache immediately
-      queryClient.setQueryData(["authUser"], data.user);
+      queryClient.setQueryData(["authUser"], data.user || data.data?.user);
       // Invalidate the query to force a refetch of profile from server
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
@@ -49,11 +58,6 @@ export const useAuth = (enabled = true) => {
     mutationFn: async (userData) => {
       const { data } = await api.post("/auth/register", userData);
       return data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["authUser"], data.user);
-      // Invalidate the query to force a refetch of profile from server
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 
@@ -69,6 +73,7 @@ export const useAuth = (enabled = true) => {
   return {
     user,
     isLoading,
+    error,
     isAuthenticated: !!user,
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,

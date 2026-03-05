@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useProducts } from './hooks/useProducts';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../store/uiSlice';
@@ -20,6 +20,7 @@ const SORT_OPTIONS = [
 const ProductList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const page = parseInt(searchParams.get('page') || '1', 10);
     const search = searchParams.get('search') || '';
@@ -55,7 +56,17 @@ const ProductList = () => {
     };
 
     const handleAddToCart = (product) => {
-        dispatch(addToCart(product));
+        // Only pass necessary fields to cart to avoid leaking objects
+        dispatch(addToCart({
+            _id: product._id || product.id,
+            id: product._id || product.id,
+            title: product.title,
+            price: product.price,
+            images: product.images,
+            imageUrl: product.imageUrl,
+            stock: product.stock ?? product.stockQuantity,
+            stockQuantity: product.stock ?? product.stockQuantity,
+        }));
         toast.success(`${product.title} added to cart!`);
     };
 
@@ -132,8 +143,13 @@ const ProductList = () => {
                             {data?.products?.map((product) => {
                                 // Get first image from images array or use placeholder
                                 const imageUrl = product.images?.[0] || product.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image';
-                                const stockQuantity = product.stock ?? product.stockQuantity ?? 0;
-                                
+
+                                // Calculate total stock from variants if they exist, otherwise use product.stock
+                                const hasVariants = product.variants && product.variants.length > 0;
+                                const stockQuantity = hasVariants
+                                    ? product.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+                                    : (product.stock ?? product.stockQuantity ?? 0);
+
                                 return (
                                     <Card key={product._id || product.id} className="flex flex-col overflow-hidden">
                                         <Link to={`/products/${product._id || product.id}`} className="block relative group overflow-hidden">
@@ -142,10 +158,18 @@ const ProductList = () => {
                                                 alt={product.title}
                                                 className="w-full h-[250px] object-cover transition-transform duration-300 group-hover:scale-105"
                                                 onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                                                    const target = e.target;
+                                                    if (target.dataset.fallback) return;
+                                                    target.dataset.fallback = 'true';
+                                                    target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect fill="%23ddd" width="300" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="16"%3ENo Image%3C/text%3E%3C/svg%3E';
                                                 }}
                                             />
-                                            {stockQuantity <= 5 && stockQuantity > 0 && (
+                                            {hasVariants && stockQuantity > 0 && stockQuantity <= 5 && (
+                                                <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                                                    Low Stock
+                                                </span>
+                                            )}
+                                            {!hasVariants && stockQuantity <= 5 && stockQuantity > 0 && (
                                                 <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
                                                     Low Stock
                                                 </span>
@@ -158,20 +182,33 @@ const ProductList = () => {
                                         </Link>
                                         <CardHeader className="p-4 pt-4">
                                             <CardTitle className="text-lg line-clamp-1">{product.title}</CardTitle>
-                                            <CardDescription className="text-primary font-bold">₹{product.price.toFixed(2)}</CardDescription>
+                                            <CardDescription className="text-primary font-bold">${product.price.toFixed(2)}</CardDescription>
                                         </CardHeader>
                                         <CardContent className="px-4 py-0 flex-1">
                                             <p className="text-sm text-muted-foreground line-clamp-2">
                                                 {product.description}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-2">
+                                                {stockQuantity === 0
+                                                    ? 'Out of Stock'
+                                                    : `${stockQuantity} ${stockQuantity === 1 ? 'item' : 'items'} available`}
                                             </p>
                                         </CardContent>
                                         <CardFooter className="p-4">
                                             <Button
                                                 className="w-full"
                                                 disabled={stockQuantity === 0}
-                                                onClick={() => handleAddToCart(product)}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    // If product has variants, ALWAYS redirect to product detail page
+                                                    if (product.variants && product.variants.length > 0) {
+                                                        navigate(`/products/${product._id || product.id}`);
+                                                    } else {
+                                                        handleAddToCart(product);
+                                                    }
+                                                }}
                                             >
-                                                {stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                                {stockQuantity === 0 ? 'Out of Stock' : (product.variants && product.variants.length > 0 ? 'Select Options' : 'Add to Cart')}
                                             </Button>
                                         </CardFooter>
                                     </Card>

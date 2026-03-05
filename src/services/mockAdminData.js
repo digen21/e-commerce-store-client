@@ -166,7 +166,6 @@ export const mockRecentOrders = {
           fullName: 'John Doe',
           phone: '+91 9876543210',
           addressLine1: '123 Main Street',
-          addressLine2: 'Apt 4B',
           city: 'Mumbai',
           state: 'Maharashtra',
           postalCode: '400001',
@@ -602,7 +601,6 @@ export const mockStoreSettings = {
     storePhone: '+91 9876543210',
     address: {
       addressLine1: '123 Business Park',
-      addressLine2: 'Suite 456',
       city: 'Mumbai',
       state: 'Maharashtra',
       postalCode: '400001',

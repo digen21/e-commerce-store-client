@@ -1,6 +1,7 @@
 import { useFormik } from 'formik';
 import { AlertCircle, CheckCircle, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForgotPassword } from './hooks/useForgotPassword';
+import { useAuth } from './hooks/useAuth';
 
 const ForgotPassword = () => {
     const { mutate: forgotPassword, isPending, isSuccess, isError, error } = useForgotPassword();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (user) {
+            navigate('/', { replace: true });
+        }
+    }, [user, navigate]);
 
     const formik = useFormik({
         initialValues: {

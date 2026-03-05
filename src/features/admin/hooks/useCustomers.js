@@ -2,11 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
 import { mockCustomers, mockTopProducts } from '@/services/mockAdminData';
 
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
+/**
+ * Fetch all customers (users) with pagination and search
+ * API: GET /api/users?page=1&limit=10
+ */
 export const useCustomers = (options = {}) => {
     const { page = 1, limit = 10, search = '' } = options;
-    
+
     return useQuery({
         queryKey: ['adminCustomers', { page, limit, search }],
         queryFn: async () => {
@@ -15,7 +19,7 @@ export const useCustomers = (options = {}) => {
                 // Filter mock data based on search
                 let customers = mockCustomers.data.customers;
                 if (search) {
-                    customers = customers.filter(c => 
+                    customers = customers.filter(c =>
                         c.name.toLowerCase().includes(search.toLowerCase()) ||
                         c.email.toLowerCase().includes(search.toLowerCase())
                     );
@@ -25,16 +29,24 @@ export const useCustomers = (options = {}) => {
                     customers: customers.slice((page - 1) * limit, page * limit)
                 };
             }
-            
-            const { data } = await api.get('/api/admin/customers', {
+
+            const { data } = await api.get('/users', {
                 params: { page, limit, search }
             });
-            return data;
+            // API returns: { success: true, message: "...", data: [...users], pagination: {...} }
+            return {
+                customers: data.data || [],
+                pagination: data.pagination || {}
+            };
         },
         staleTime: 5 * 60 * 1000,
     });
 };
 
+/**
+ * Fetch single customer details
+ * Note: Backend may not have this endpoint yet, using mock data as fallback
+ */
 export const useCustomerDetails = (customerId) => {
     return useQuery({
         queryKey: ['adminCustomerDetails', customerId],
@@ -44,15 +56,18 @@ export const useCustomerDetails = (customerId) => {
                 const customer = mockCustomers.data.customers.find(c => c._id === customerId);
                 return customer;
             }
-            
-            const { data } = await api.get(`/api/admin/customers/${customerId}`);
-            return data;
+
+            const { data } = await api.get(`/users/${customerId}`);
+            return data.data || data;
         },
         enabled: !!customerId,
         staleTime: 10 * 60 * 1000,
     });
 };
 
+/**
+ * Fetch top products by period
+ */
 export const useTopProducts = (period = 'monthly') => {
     return useQuery({
         queryKey: ['adminTopProducts', period],
@@ -61,8 +76,8 @@ export const useTopProducts = (period = 'monthly') => {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 return { ...mockTopProducts.data, period };
             }
-            
-            const { data } = await api.get('/api/admin/analytics/top-products', {
+
+            const { data } = await api.get('/admin/analytics/top-products', {
                 params: { period }
             });
             return data;

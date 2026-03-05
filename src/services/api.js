@@ -14,7 +14,6 @@ export const api = axios.create({
 // Request interceptor for debugging (optional - remove in production if not needed)
 api.interceptors.request.use(
     (config) => {
-        console.log('API Request:', config.method?.toUpperCase(), config.url);
         return config;
     },
     (error) => {
@@ -27,7 +26,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        console.error('API Error:', error.response?.status, error.response?.data);
+        // Only log actual errors, not network connectivity issues
+        if (error.response) {
+            console.error('API Error:', error.response.status, error.response.data);
+        } else if (error.request) {
+            // Network error - don't spam console, but still reject
+            console.warn('Network Error: Server may be unavailable');
+        } else {
+            console.error('Request Error:', error.message);
+        }
         return Promise.reject(error);
     }
 );

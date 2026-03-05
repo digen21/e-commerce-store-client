@@ -24,7 +24,10 @@ import AdminOrders from './features/admin/pages/Orders';
 import AdminCustomers from './features/admin/pages/Customers';
 import AdminInventory from './features/admin/pages/Inventory';
 import AdminSettings from './features/admin/pages/Settings';
+import Checkout from './features/checkout/Checkout';
 import OrderHistory from './features/orders/OrderHistory';
+import PaymentSuccess from './features/payment/PaymentSuccess';
+import PaymentFailure from './features/payment/PaymentFailure';
 import { AdminRoute, ProtectedRoute } from './routes/ProtectedRoutes';
 
 function App() {
@@ -61,6 +64,9 @@ function App() {
           {/* User Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/orders" element={<OrderHistory />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failure" element={<PaymentFailure />} />
           </Route>
         </Route>
 

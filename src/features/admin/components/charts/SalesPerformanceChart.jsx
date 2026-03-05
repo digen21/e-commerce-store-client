@@ -15,8 +15,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
 import { TrendingUp, BarChart3 } from 'lucide-react';
 
-const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
-    const [chartPeriod, setChartPeriod] = useState(period);
+const SalesPerformanceChart = ({ data, period = 'weekly', onPeriodChange }) => {
+    // Use period from props, don't maintain internal state for period
+    const chartPeriod = period;
     const [chartType, setChartType] = useState('bar'); // 'bar' or 'line'
 
     const chartData = useMemo(() => {
@@ -33,13 +34,20 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
 
     const summary = data?.summary || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
 
+    // Handle period change - notify parent to fetch new data
+    const handlePeriodChange = (newPeriod) => {
+        if (onPeriodChange) {
+            onPeriodChange(newPeriod);
+        }
+    };
+
     return (
         <Card className="col-span-1 lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <div>
                     <CardTitle className="text-lg font-semibold">Sales Performance</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Total Revenue: ₹{summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Total Revenue: ${summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -55,7 +63,7 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
                         </TabsList>
                     </Tabs>
                     {/* Period Toggle */}
-                    <Tabs value={chartPeriod} onValueChange={setChartPeriod}>
+                    <Tabs value={chartPeriod} onValueChange={handlePeriodChange}>
                         <TabsList className="h-8">
                             <TabsTrigger value="weekly" className="h-7 px-2 text-xs">
                                 Weekly
@@ -94,7 +102,7 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                    tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                                    tickFormatter={(value) => `${value.toLocaleString()}`}
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'hsl(var(--accent)/0.1)' }}
@@ -107,7 +115,7 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
                                     itemStyle={{ color: 'hsl(var(--foreground))' }}
                                     formatter={(value, name) => {
                                         if (name === 'Revenue') {
-                                            return [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
+                                            return [`${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
                                         }
                                         return [value, 'Orders'];
                                     }}
@@ -144,7 +152,7 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                    tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                                    tickFormatter={(value) => `${value.toLocaleString()}`}
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'hsl(var(--accent)/0.1)' }}
@@ -157,7 +165,7 @@ const SalesPerformanceChart = ({ data, period = 'weekly' }) => {
                                     itemStyle={{ color: 'hsl(var(--foreground))' }}
                                     formatter={(value, name) => {
                                         if (name === 'Revenue') {
-                                            return [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
+                                            return [`${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
                                         }
                                         return [value, 'Orders'];
                                     }}

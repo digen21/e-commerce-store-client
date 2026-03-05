@@ -16,7 +16,6 @@ const mockAdminProfile = {
         gstn: '27AABCU9603R1ZM',
         address: {
             addressLine1: '123 Business Park',
-            addressLine2: '',
             city: 'Mumbai',
             state: 'Maharashtra',
             postalCode: '400001',
@@ -44,11 +43,23 @@ export const useAdminProfile = () => {
                 return mockAdminProfile.data;
             }
 
-            const { data } = await api.get('/admin/profile');
-            // API returns { success: true, data: {...} }, so we return data.data
-            return data.data || data;
+            // API endpoint: /api/admin/profile
+            try {
+                const { data } = await api.get('/admin/profile');
+                // API returns { success: true, data: {...} }, so we return data.data
+                return data.data || data;
+            } catch (error) {
+                // If profile doesn't exist (404), return empty object to allow creation
+                if (error?.response?.status === 404) {
+                    console.warn('Admin profile not found, will be created on first save');
+                    return null;
+                }
+                // Re-throw other errors
+                throw error;
+            }
         },
         staleTime: 10 * 60 * 1000, // 10 minutes
+        retry: false, // Don't retry on error
     });
 };
 
@@ -62,6 +73,8 @@ export const useUpdateAdminProfile = () => {
                 return { success: true, message: 'Profile updated successfully' };
             }
 
+            // API endpoint: /api/admin/profile (PUT)
+            // Payload should include storeName, not name
             const { data } = await api.put('/admin/profile', profileData);
             return data;
         },

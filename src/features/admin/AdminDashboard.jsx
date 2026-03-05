@@ -1,26 +1,29 @@
-import React from 'react';
+import { Eye } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import OrderStatusDonut from './components/charts/OrderStatusDonut';
+import SalesPerformanceChart from './components/charts/SalesPerformanceChart';
+import RecentOrdersTable from './components/tables/RecentOrdersTable';
+import LowStockWidget from './components/widgets/LowStockWidget';
+import OverviewCards from './components/widgets/OverviewCards';
 import {
     useAdminDashboard,
-    useSalesTrends,
     useOrderStatusDistribution,
+    useSalesTrends,
 } from './hooks/useAdminDashboard';
 import { useLowStockProducts } from './hooks/useInventory';
 import { useAdminOrders } from './hooks/useOrders';
-import OverviewCards from './components/widgets/OverviewCards';
-import SalesPerformanceChart from './components/charts/SalesPerformanceChart';
-import OrderStatusDonut from './components/charts/OrderStatusDonut';
-import RecentOrdersTable from './components/tables/RecentOrdersTable';
-import LowStockWidget from './components/widgets/LowStockWidget';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+    const [salesPeriod, setSalesPeriod] = useState('weekly');
     const { data: dashboard, isLoading: dashboardLoading } = useAdminDashboard();
-    const { data: salesData, isLoading: salesLoading } = useSalesTrends('weekly');
+    const { data: salesData, isLoading: salesLoading } = useSalesTrends(salesPeriod);
     const { data: orderStatusData, isLoading: orderStatusLoading } = useOrderStatusDistribution();
     const { data: lowStockData, isLoading: lowStockLoading } = useLowStockProducts(5);
     const { data: ordersData, isLoading: ordersLoading } = useAdminOrders({ limit: 5 });
@@ -68,7 +71,11 @@ const AdminDashboard = () => {
                         </CardContent>
                     </Card>
                 ) : (
-                    <SalesPerformanceChart data={salesData} period="weekly" />
+                    <SalesPerformanceChart 
+                        data={salesData} 
+                        period={salesPeriod}
+                        onPeriodChange={setSalesPeriod}
+                    />
                 )}
 
                 {/* Order Status Donut Chart */}

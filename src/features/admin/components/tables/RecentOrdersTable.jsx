@@ -64,12 +64,12 @@ const RecentOrdersTable = ({ orders, onViewOrder }) => {
                         </TableCell>
                         <TableCell>
                             <div className="flex flex-col">
-                                <span className="font-medium">{order.customer?.name}</span>
-                                <span className="text-xs text-muted-foreground">{order.customer?.email}</span>
+                                <span className="font-medium">{order.user?.name || 'Customer'}</span>
+                                <span className="text-xs text-muted-foreground">{order.user?.email || 'N/A'}</span>
                             </div>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-primary">
-                            ₹{order.totalAmount?.toFixed(2) || '0.00'}
+                            ${order.totalAmount?.toFixed(2) || '0.00'}
                         </TableCell>
                         <TableCell>
                             <Badge

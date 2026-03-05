@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
-import { useAdminOrders } from './hooks/useOrders';
-import { useSalesTrends } from './hooks/useAdminDashboard';
-import SalesPerformanceChart from './components/charts/SalesPerformanceChart';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import SalesPerformanceChart from './components/charts/SalesPerformanceChart';
+import { useSalesTrends } from './hooks/useAdminDashboard';
+import { useAdminOrders } from './hooks/useOrders';
+
 
 const AdminSales = () => {
     const { data: ordersData, isLoading: ordersLoading } = useAdminOrders({ limit: 100 });
@@ -41,7 +42,7 @@ const AdminSales = () => {
                 <CardHeader>
                     <CardTitle>Recent Transactions</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Total Orders: {summary.totalOrders} | Total Revenue: ₹{summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Total Orders: {summary.totalOrders} | Total Revenue: ${summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                 </CardHeader>
                 <CardContent>
@@ -76,7 +77,7 @@ const AdminSales = () => {
                                             <Badge variant="secondary">{order.items?.reduce((acc, it) => acc + (it.quantity || 0), 0)} items</Badge>
                                         </TableCell>
                                         <TableCell className="text-right font-bold text-primary">
-                                            ₹{order.totalAmount?.toFixed(2)}
+                                            ${order.totalAmount?.toFixed(2)}
                                         </TableCell>
                                     </TableRow>
                                 ))}

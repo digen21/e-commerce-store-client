@@ -1,17 +1,14 @@
-import React from 'react';
-import { useInventoryOverview, useLowStockProducts, useAdjustStock } from '../hooks/useInventory';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Package, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
-import OverviewCards from '../components/widgets/OverviewCards';
+import { AlertTriangle, DollarSign, Package } from 'lucide-react';
 import LowStockWidget from '../components/widgets/LowStockWidget';
+import OverviewCards from '../components/widgets/OverviewCards';
+import { useInventoryOverview, useLowStockProducts } from '../hooks/useInventory';
 
 const AdminInventory = () => {
     const { data: inventory, isLoading } = useInventoryOverview();
     const { data: lowStock } = useLowStockProducts(5);
-    const adjustStock = useAdjustStock();
+
 
     if (isLoading) {
         return (
@@ -93,7 +90,7 @@ const AdminInventory = () => {
                         <DollarSign className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{inventory?.totalStockValue?.toLocaleString('en-IN') || '0'}</div>
+                        <div className="text-2xl font-bold">${inventory?.totalStockValue?.toLocaleString('en-IN') || '0'}</div>
                         <p className="text-xs text-muted-foreground">Total inventory value</p>
                     </CardContent>
                 </Card>
@@ -112,7 +109,7 @@ const AdminInventory = () => {
                                     <span className="text-sm font-medium">{category.name}</span>
                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                         <span>{category.count} products</span>
-                                        <span className="font-semibold text-primary">₹{category.stockValue?.toLocaleString('en-IN')}</span>
+                                        <span className="font-semibold text-primary">${category.stockValue?.toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
                                 <Progress value={(category.count / inventory.totalProducts) * 100} className="h-2" />

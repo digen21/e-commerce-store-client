@@ -8,9 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 
 const PREDEFINED_CATEGORIES = ['Streetwear', 'Classic', 'Graphic', 'Premium'];
+
+const VARIANT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
 
 export const ProductFormDialog = ({ open, onOpenChange, product }) => {
     const { addProduct, updateProduct } = useProductMutations();
@@ -18,6 +23,20 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
     const [imageInput, setImageInput] = useState('');
     const [customCategory, setCustomCategory] = useState('');
     const [showCustomCategory, setShowCustomCategory] = useState(false);
+    const [hasVariants, setHasVariants] = useState(!!product?.variants?.length);
+
+    // Initialize variants from product data if editing
+    const getInitialVariants = () => {
+        if (product?.variants?.length) {
+            return product.variants.map(v => ({
+                size: v.size,
+                stock: v.stock,
+                sku: v.sku || '',
+                _id: v._id
+            }));
+        }
+        return [];
+    };
 
     const formik = useFormik({
         enableReinitialize: true,
@@ -28,6 +47,7 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
             stock: product?.stock || product?.stockQuantity || 0,
             images: product?.images || (product?.imageUrl ? [product.imageUrl] : []),
             category: product?.category || 'General',
+            variants: getInitialVariants(),
         },
         validationSchema: Yup.object({
             title: Yup.string().required('Product title is required'),
@@ -39,14 +59,43 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
         }),
         onSubmit: async (values, { setSubmitting }) => {
             try {
+                // Validate variants if enabled
+                if (hasVariants) {
+                    if (!values.variants || values.variants.length === 0) {
+                        toast.error('Please add at least one variant');
+                        setSubmitting(false);
+                        return;
+                    }
+                    const invalidVariant = values.variants.find(v => !v.size || !v.stock);
+                    if (invalidVariant) {
+                        toast.error('Please fill in all variant fields (size and stock)');
+                        setSubmitting(false);
+                        return;
+                    }
+                }
+
+                // Calculate total stock from variants if variants are enabled
+                const totalStock = hasVariants 
+                    ? values.variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0)
+                    : values.stock;
+
                 const submitData = {
                     title: values.title,
                     description: values.description,
                     price: values.price,
                     category: values.category,
-                    stock: values.stock,
+                    stock: totalStock,
                     images: values.images,
                 };
+
+                // Include variants if enabled
+                if (hasVariants) {
+                    submitData.variants = values.variants.map(v => ({
+                        size: v.size,
+                        stock: parseInt(v.stock) || 0,
+                        sku: v.sku?.trim() || undefined,
+                    }));
+                }
 
                 if (isEditing) {
                     await updateProduct.mutateAsync({ id: product._id || product.id, ...submitData });
@@ -58,30 +107,28 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
                 onOpenChange(false);
             } catch (err) {
                 let errorMessage = 'Failed to save product';
-                
-                // Handle validation errors from backend
+
                 if (err?.response?.data?.errors) {
                     const errors = err.response.data.errors;
-                    // Extract first error message
                     const firstErrorKey = Object.keys(errors)[0];
                     if (firstErrorKey) {
                         const errorValue = errors[firstErrorKey];
-                        errorMessage = typeof errorValue === 'string' 
-                            ? errorValue 
+                        errorMessage = typeof errorValue === 'string'
+                            ? errorValue
                             : (errorValue?.message || 'Validation failed');
                     }
                 } else if (err?.response?.data?.message) {
-                    errorMessage = typeof err.response.data.message === 'string' 
-                        ? err.response.data.message 
+                    errorMessage = typeof err.response.data.message === 'string'
+                        ? err.response.data.message
                         : 'Failed to save product';
                 } else if (err?.response?.data?.error) {
-                    errorMessage = typeof err.response.data.error === 'string' 
-                        ? err.response.data.error 
+                    errorMessage = typeof err.response.data.error === 'string'
+                        ? err.response.data.error
                         : 'Failed to save product';
                 } else if (err?.message) {
                     errorMessage = err.message;
                 }
-                
+
                 toast.error(errorMessage);
             } finally {
                 setSubmitting(false);
@@ -133,9 +180,46 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
         }
     };
 
+    // Variant management functions
+    const handleAddVariant = () => {
+        // Find the first available size that's not already used
+        const usedSizes = getUsedSizes();
+        const firstAvailableSize = VARIANT_SIZES.find(size => !usedSizes.includes(size)) || 'M';
+        const newVariants = [...formik.values.variants, { size: firstAvailableSize, stock: 0, sku: '' }];
+        formik.setFieldValue('variants', newVariants, true);
+    };
+
+    const handleRemoveVariant = (index) => {
+        const newVariants = formik.values.variants.filter((_, i) => i !== index);
+        formik.setFieldValue('variants', newVariants, true);
+    };
+
+    const handleVariantChange = (index, field, value) => {
+        const newVariants = [...formik.values.variants];
+        newVariants[index] = { ...newVariants[index], [field]: value };
+        formik.setFieldValue('variants', newVariants, true);
+    };
+
+    const getUsedSizes = (excludeIndex) => {
+        return formik.values.variants
+            .filter((_, i) => i !== excludeIndex)
+            .map(v => v.size)
+            .filter(Boolean);
+    };
+
+    const handleToggleVariants = (checked) => {
+        setHasVariants(checked);
+        if (!checked) {
+            formik.setFieldValue('variants', []);
+        } else if (formik.values.variants.length === 0) {
+            // Add a default variant when enabling variants for the first time
+            formik.setFieldValue('variants', [{ size: 'M', stock: 0, sku: '' }]);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] overflow-y-auto max-h-[90vh]">
+            <DialogContent className="sm:max-w-[700px] overflow-y-auto max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>{isEditing ? 'Edit Product' : 'Add New Product'}</DialogTitle>
                     <DialogDescription>
@@ -144,6 +228,7 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
                 </DialogHeader>
 
                 <form onSubmit={formik.handleSubmit} className="grid gap-4 py-4">
+                    {/* Basic Info */}
                     <div className="grid gap-2">
                         <Label htmlFor="title">Product Title</Label>
                         <Input
@@ -180,7 +265,7 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="price">Price (₹)</Label>
+                            <Label htmlFor="price">Base Price (₹)</Label>
                             <Input
                                 id="price"
                                 name="price"
@@ -197,16 +282,23 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
                             )}
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="stock">Stock Quantity</Label>
+                            <Label htmlFor="stock">Total Stock</Label>
                             <Input
                                 id="stock"
                                 name="stock"
                                 type="number"
+                                disabled={hasVariants}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                value={formik.values.stock}
+                                value={hasVariants ? formik.values.variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0) : formik.values.stock}
+                                className={hasVariants ? 'bg-muted' : ''}
                             />
-                            {formik.touched.stock && formik.errors.stock && (
+                            {hasVariants && (
+                                <p className="text-xs text-muted-foreground">
+                                    Calculated from variants
+                                </p>
+                            )}
+                            {!hasVariants && formik.touched.stock && formik.errors.stock && (
                                 <p className="text-red-500 text-xs">
                                     {typeof formik.errors.stock === 'string' ? formik.errors.stock : 'Required'}
                                 </p>
@@ -277,6 +369,105 @@ export const ProductFormDialog = ({ open, onOpenChange, product }) => {
                             </p>
                         )}
                     </div>
+
+                    {/* Variants Toggle */}
+                    <Card>
+                        <CardContent className="pt-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Product Variants</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Enable to add size variants (S, M, L, etc.) with individual stock
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={hasVariants}
+                                    onCheckedChange={handleToggleVariants}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Variants Section */}
+                    {hasVariants && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label>Variants</Label>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleAddVariant}
+                                >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Add Variant
+                                </Button>
+                            </div>
+
+                            {formik.values.variants.length === 0 ? (
+                                <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground text-sm">
+                                        No variants added. Click "Add Variant" to add size options.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {formik.values.variants.map((variant, index) => {
+                                        const usedSizes = getUsedSizes(index);
+                                        const availableSizes = VARIANT_SIZES.filter(size => !usedSizes.includes(size) || size === variant.size);
+
+                                        return (
+                                            <div key={`variant-${index}`} className="flex items-center gap-2 p-3 border rounded-lg bg-card">
+                                                <Select
+                                                    value={variant.size}
+                                                    onValueChange={(value) => handleVariantChange(index, 'size', value)}
+                                                >
+                                                    <SelectTrigger className="w-[120px]">
+                                                        <SelectValue placeholder="Select size" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableSizes.map(size => (
+                                                            <SelectItem
+                                                                key={size}
+                                                                value={size}
+                                                            >
+                                                                {size}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Stock"
+                                                    value={variant.stock || ''}
+                                                    onChange={(e) => handleVariantChange(index, 'stock', e.target.value)}
+                                                    className="w-[100px]"
+                                                />
+
+                                                <Input
+                                                    placeholder="SKU (optional)"
+                                                    value={variant.sku || ''}
+                                                    onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
+                                                    className="flex-1"
+                                                />
+
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleRemoveVariant(index)}
+                                                    className="text-destructive hover:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Images Section */}
                     <div className="grid gap-2">

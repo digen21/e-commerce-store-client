@@ -18,20 +18,19 @@ const AdminSettings = () => {
     const formik = useFormik({
         enableReinitialize: true,
         initialValues: {
-            storeName: profile?.storeName || '',
-            email: profile?.email || '',
-            phone: profile?.phone || '',
-            gstn: profile?.gstn || '',
-            addressLine1: profile?.address?.addressLine1 || '',
-            addressLine2: profile?.address?.addressLine2 || '',
-            city: profile?.address?.city || '',
-            state: profile?.address?.state || '',
-            postalCode: profile?.address?.postalCode || '',
-            country: profile?.address?.country || '',
-            taxRate: profile?.taxRate || 18,
-            lowStockThreshold: profile?.lowStockThreshold || 5,
-            currency: profile?.currency || 'INR',
-            emailNotifications: profile?.emailNotifications || {
+            storeName: profile?.data?.storeName || profile?.storeName || '',
+            email: profile?.data?.email || profile?.email || '',
+            phone: profile?.data?.phone || profile?.phone || '',
+            gstn: profile?.data?.gstn || profile?.gstn || '',
+            addressLine1: profile?.data?.address?.addressLine1 || profile?.address?.addressLine1 || '',
+            city: profile?.data?.address?.city || profile?.address?.city || '',
+            state: profile?.data?.address?.state || profile?.address?.state || '',
+            postalCode: profile?.data?.address?.postalCode || profile?.address?.postalCode || '',
+            country: profile?.data?.address?.country || profile?.address?.country || '',
+            taxRate: profile?.data?.taxRate || profile?.taxRate || 18,
+            lowStockThreshold: profile?.data?.lowStockThreshold || profile?.lowStockThreshold || 5,
+            currency: profile?.data?.currency || profile?.currency || 'INR',
+            emailNotifications: profile?.data?.emailNotifications || profile?.emailNotifications || {
                 newOrder: false,
                 lowStock: false,
                 orderShipped: false,
@@ -43,8 +42,10 @@ const AdminSettings = () => {
             phone: Yup.string().required('Phone number is required'),
             gstn: Yup.string()
                 .uppercase()
-                .length(15, 'GSTN must be exactly 15 characters')
-                .matches(/^[0-9A-Z]+$/, 'GSTN must contain only alphanumeric characters'),
+                .min(15, 'GSTN must be at least 15 characters')
+                .max(15, 'GSTN must be at most 15 characters')
+                .matches(/^[0-9A-Z]+$/, 'GSTN must contain only alphanumeric characters')
+                .nullable(),
             addressLine1: Yup.string().required('Address is required'),
             city: Yup.string().required('City is required'),
             state: Yup.string().required('State is required'),
@@ -72,10 +73,22 @@ const AdminSettings = () => {
                 await updateProfile.mutateAsync(updateData);
                 toast.success('Store settings updated successfully!');
             } catch (error) {
-                const errorMessage = error?.response?.data?.message || 
-                                     error?.response?.data?.error ||
-                                     error?.message || 
-                                     'Failed to update settings';
+                console.error('Settings update error:', error);
+                
+                let errorMessage = 'Failed to update settings';
+                
+                if (error?.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error?.response?.data?.error) {
+                    errorMessage = error.response.data.error;
+                } else if (error?.response?.status === 404) {
+                    errorMessage = 'Admin profile not found. Please contact support.';
+                } else if (error?.response?.status === 401) {
+                    errorMessage = 'Please login again to continue.';
+                } else if (error?.message) {
+                    errorMessage = error.message;
+                }
+                
                 toast.error(typeof errorMessage === 'string' ? errorMessage : 'Failed to update settings');
             }
         },
@@ -170,16 +183,21 @@ const AdminSettings = () => {
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="gstn">GSTN (GST Identification Number)</Label>
+                            <Label htmlFor="gstn">GSTN (GST Identification Number) - Optional</Label>
                             <Input
                                 id="gstn"
                                 name="gstn"
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 value={formik.values.gstn?.toUpperCase() || ''}
-                                placeholder="27AABCU9603R1ZM"
+                                placeholder="27AABCU9603R1ZM (optional)"
                                 className="uppercase"
                             />
+                            {formik.touched.gstn && formik.errors.gstn && (
+                                <p className="text-red-500 text-xs">
+                                    {typeof formik.errors.gstn === 'string' ? formik.errors.gstn : ''}
+                                </p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="currency">Currency</Label>
@@ -203,17 +221,6 @@ const AdminSettings = () => {
                                         {typeof formik.errors.addressLine1 === 'string' ? formik.errors.addressLine1 : 'Required'}
                                     </p>
                                 )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="addressLine2">Address Line 2</Label>
-                                <Input
-                                    id="addressLine2"
-                                    name="addressLine2"
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    value={formik.values.addressLine2}
-                                    placeholder="Apartment, suite, etc. (optional)"
-                                />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="city">City</Label>
@@ -277,9 +284,12 @@ const AdminSettings = () => {
                             </div>
                         </div>
                     </div>
-                    <Button type="submit" disabled={updateProfile.isPending}>
+                    <Button 
+                        type="submit" 
+                        disabled={updateProfile.isPending || formik.isSubmitting}
+                    >
                         <Save className="h-4 w-4 mr-2" />
-                        {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
+                        {updateProfile.isPending || formik.isSubmitting ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </CardContent>
             </Card>
@@ -328,9 +338,12 @@ const AdminSettings = () => {
                             )}
                         </div>
                     </div>
-                    <Button type="submit" disabled={updateProfile.isPending}>
+                    <Button 
+                        type="submit" 
+                        disabled={updateProfile.isPending || formik.isSubmitting}
+                    >
                         <Save className="h-4 w-4 mr-2" />
-                        {updateProfile.isPending ? 'Saving...' : 'Save Settings'}
+                        {updateProfile.isPending || formik.isSubmitting ? 'Saving...' : 'Save Settings'}
                     </Button>
                 </CardContent>
             </Card>

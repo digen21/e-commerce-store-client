@@ -37,7 +37,7 @@ const SalesBarChart = ({ data, period = 'weekly' }) => {
                 <div>
                     <CardTitle className="text-lg font-semibold">Sales Performance</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                        Total Revenue: ₹{summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Total Revenue: ${summary.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                 </div>
                 <Tabs value={chartPeriod} onValueChange={setChartPeriod}>
@@ -73,7 +73,7 @@ const SalesBarChart = ({ data, period = 'weekly' }) => {
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                                tickFormatter={(value) => `₹${value.toLocaleString()}`}
+                                tickFormatter={(value) => `${value.toLocaleString()}`}
                             />
                             <Tooltip
                                 cursor={{ fill: 'hsl(var(--accent)/0.1)' }}
@@ -86,7 +86,7 @@ const SalesBarChart = ({ data, period = 'weekly' }) => {
                                 itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 formatter={(value, name) => {
                                     if (name === 'Revenue') {
-                                        return [`₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
+                                        return [`${value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`, 'Revenue'];
                                     }
                                     return [value, 'Orders'];
                                 }}

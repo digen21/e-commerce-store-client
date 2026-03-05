@@ -68,7 +68,7 @@ const AdminProducts = () => {
                             <TableHead>Product</TableHead>
                             <TableHead>Category</TableHead>
                             <TableHead>Price</TableHead>
-                            <TableHead>Inventory</TableHead>
+                            <TableHead>Variants</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -108,8 +108,8 @@ const AdminProducts = () => {
                         ) : (
                             data.products.map((product) => {
                                 // Get first image from images array or use placeholder
-                                const imageUrl = product.images?.[0] || product.imageUrl || 'https://via.placeholder.com/100x100?text=No+Image';
-                                const stockQuantity = product.stock ?? product.stockQuantity ?? 0;
+                                const imageUrl = product.images?.[0] || product.imageUrl;
+                                const variants = product.variants || [];
 
                                 return (
                                     <TableRow key={product._id || product.id}>
@@ -120,7 +120,10 @@ const AdminProducts = () => {
                                                     alt={product.title}
                                                     className="w-10 h-10 object-cover rounded-md bg-muted"
                                                     onError={(e) => {
-                                                        e.target.src = 'https://via.placeholder.com/100x100?text=No+Image';
+                                                        const target = e.target;
+                                                        if (target.dataset.fallback) return;
+                                                        target.dataset.fallback = 'true';
+                                                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
                                                     }}
                                                 />
                                                 <span className="line-clamp-1 max-w-[200px]">{product.title}</span>
@@ -129,14 +132,22 @@ const AdminProducts = () => {
                                         <TableCell>
                                             <Badge variant="outline">{product.category}</Badge>
                                         </TableCell>
-                                        <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                                        <TableCell>${product.price.toFixed(2)}</TableCell>
                                         <TableCell>
-                                            {stockQuantity === 0 ? (
-                                                <Badge variant="destructive">Out of Stock</Badge>
-                                            ) : stockQuantity <= 5 ? (
-                                                <Badge className="bg-orange-500 hover:bg-orange-600">{stockQuantity} Left</Badge>
+                                            {variants.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {variants.map((variant, idx) => (
+                                                        <Badge
+                                                            key={variant._id || idx}
+                                                            variant="secondary"
+                                                            className={variant.stock <= 0 ? 'bg-destructive/20 text-destructive' : variant.stock <= 5 ? 'bg-orange-500/20 text-orange-600' : 'bg-green-500/20 text-green-600'}
+                                                        >
+                                                            {variant.size}: {variant.stock}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
                                             ) : (
-                                                <Badge className="bg-green-600 hover:bg-green-700">{stockQuantity} In Stock</Badge>
+                                                <Badge variant="outline">No Variants</Badge>
                                             )}
                                         </TableCell>
                                         <TableCell className="text-right">
